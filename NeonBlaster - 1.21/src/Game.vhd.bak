@@ -1,0 +1,236 @@
+----------------------------------------------------------------------------------
+-- Moving Square Demonstration 
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use ieee.numeric_std.all;
+use IEEE.STD_LOGIC_ARITH.all;
+use IEEE.STD_LOGIC_UNSIGNED.all;
+
+entity Game is
+	port
+	(
+		CLK_50MHz : in STD_LOGIC;
+		RESET : in STD_LOGIC;
+		LeftInput : in STD_LOGIC;
+		RightInput : in STD_LOGIC;
+		UPInput : in STD_LOGIC;
+		DownInput : in STD_LOGIC;
+		StartInput : in STD_LOGIC;
+		ColorOut : out STD_LOGIC_VECTOR(11 downto 0); -- RED & GREEN & BLUE
+		ScanlineX : in STD_LOGIC_VECTOR(10 downto 0);
+		ScanlineY : in STD_LOGIC_VECTOR(10 downto 0)
+	);
+end Game;
+
+architecture Behavioral of Game is
+	-- frame & output
+	constant maxXsize : STD_LOGIC_VECTOR(9 downto 0) := "1010000000"; -- 640
+	constant minXsize : STD_LOGIC_VECTOR(9 downto 0) := "0000010100"; -- 20
+	constant maxYsize : STD_LOGIC_VECTOR(9 downto 0) := "0111100000"; -- 480
+	constant minYsize : STD_LOGIC_VECTOR(9 downto 0) := "0000000000"; -- 0
+	signal ColorOutput : STD_LOGIC_VECTOR(11 downto 0);
+	signal isGameOn : STD_LOGIC := '0';
+	
+	-- timings
+	signal twoMilliSecs : STD_LOGIC_VECTOR(32 downto 0) := (others => '0');
+	signal twoMilliSecs_clk : STD_LOGIC := '0';
+	signal tenMilliSecs : STD_LOGIC_VECTOR(32 downto 0) := (others => '0');
+	signal tenMilliSecs_clk : STD_LOGIC := '0';
+	signal thirtyMilliSecs : STD_LOGIC_VECTOR(32 downto 0) := (others => '0');
+	signal thirtyMilliSecs_clk : STD_LOGIC := '0';
+	signal fiftyMilliSecs : STD_LOGIC_VECTOR(32 downto 0) := (others => '0');
+	signal fiftyMilliSecs_clk : STD_LOGIC := '0';
+	signal hundredMilliSecs : STD_LOGIC_VECTOR(32 downto 0) := (others => '0');
+	signal hundredMilliSecs_clk : STD_LOGIC := '0';
+	signal oneSecs : STD_LOGIC_VECTOR(32 downto 0) := (others => '0');
+	signal oneSecs_clk : STD_LOGIC := '0';
+	
+	-- enemy
+	constant SquareWidth : STD_LOGIC_VECTOR(4 downto 0) := "11001"; --25
+	signal SquareX : STD_LOGIC_VECTOR(9 downto 0) := minXsize;
+	signal SquareY : STD_LOGIC_VECTOR(9 downto 0) := minYsize;
+	signal SquareXMoveDir, SquareYMoveDir : STD_LOGIC := '0';
+	signal SquareXSpeed, SquareYSpeed : INTEGER := 10;
+	signal gravity : INTEGER := 1;
+	constant SquareXmin : STD_LOGIC_VECTOR(9 downto 0) := minXsize;
+	signal SquareXmax : STD_LOGIC_VECTOR(9 downto 0) := maxXsize - SquareWidth; --640 - SquareWidth
+	constant SquareYmin : STD_LOGIC_VECTOR(9 downto 0) := minYsize;
+	signal SquareYmax : STD_LOGIC_VECTOR(9 downto 0) := maxYsize - SquareWidth; -- 480 - SquareWidth
+	signal SquareColour : STD_LOGIC_VECTOR(2 downto 0) := "001";
+	signal isEnemyAlive : STD_LOGIC := '1';
+	signal isSquareUnderAttack : STD_LOGIC := '0';
+	signal SquareHealth : STD_LOGIC_VECTOR(3 downto 0) := "0010"; --480
+
+	
+	-- player
+	constant PlayerWidth : STD_LOGIC_VECTOR(5 downto 0) := "111100"; --60
+	constant PlayerXmin : STD_LOGIC_VECTOR(9 downto 0) := minXsize;
+	constant PlayerXmax : STD_LOGIC_VECTOR(9 downto 0) := maxXsize - PlayerWidth;
+	signal PlayerX : STD_LOGIC_VECTOR(9 downto 0) := minXsize;
+	signal PlayerY : STD_LOGIC_VECTOR(9 downto 0) := maxYsize - PlayerWidth - 10;
+	signal isPlayerAlive : STD_LOGIC := '1';
+	signal isPlayerCollided : STD_LOGIC := '0';
+	
+
+
+	
+	-- shot
+	constant ShotWidth : STD_LOGIC_VECTOR(4 downto 0) := "00100"; --4
+	constant ShotLength : STD_LOGIC_VECTOR(9 downto 0) := maxYsize; --480
+	constant ShotDamage : STD_LOGIC_VECTOR(3 downto 0) := "0001"; --480
+	signal ShotX : STD_LOGIC_VECTOR(9 downto 0) := PlayerX + 28;
+	signal ShotY : STD_LOGIC_VECTOR(9 downto 0) := minYsize;
+	constant shotPart : INTEGER := 30; -- 30
+	signal shotIterator : INTEGER;
+	
+	
+begin
+
+	Seconds : process (CLK_50Mhz, RESET)
+	begin
+		if RESET = '1' then
+			twoMilliSecs <= (others => '0');
+			tenMilliSecs <= (others => '0'); -- player
+			thirtyMilliSecs <= (others => '0'); -- enemy
+			fiftyMilliSecs <= (others => '0');  -- shot
+			hundredMilliSecs <= (others => '0');
+			oneSecs <= (others => '0');
+		elsif rising_edge(CLK_50Mhz) then
+			twoMilliSecs <= twoMilliSecs + 1; -- player
+			tenMilliSecs <= tenMilliSecs + 1;
+			thirtyMilliSecs <= thirtyMilliSecs + 1;
+			fiftyMilliSecs <= fiftyMilliSecs + 1;
+			hundredMilliSecs <= hundredMilliSecs + 1; -- enemy
+			oneSecs <= oneSecs + 1;
+			if twoMilliSecs = "11000011010100000" then -- 10 ^ 5
+				twoMilliSecs_clk <= '1';
+				twoMilliSecs <= (others => '0');
+			else
+				twoMilliSecs_clk <= '0';
+			end if;
+			if tenMilliSecs = "1111010000100100000" then -- 5 * 10 ^ 5
+				tenMilliSecs_clk <= '1';
+				tenMilliSecs <= (others => '0');
+			else
+				tenMilliSecs_clk <= '0';
+			end if;
+			if thirtyMilliSecs = "101101110001101100000" then -- 15 * 10 ^ 5
+				thirtyMilliSecs_clk <= '1';
+				thirtyMilliSecs <= (others => '0');
+			else
+				thirtyMilliSecs_clk <= '0';
+			end if;
+			if fiftyMilliSecs = "1001100010010110100000" then -- 25 * 10 ^ 5
+				fiftyMilliSecs_clk <= '1';
+				fiftyMilliSecs <= (others => '0');
+			else
+				fiftyMilliSecs_clk <= '0';
+			end if;
+			if hundredMilliSecs = "10011000100101101000000" then -- 50 * 10 ^ 5
+				hundredMilliSecs_clk <= '1';
+				hundredMilliSecs <= (others => '0');
+			else
+				hundredMilliSecs_clk <= '0';
+			end if;
+			if oneSecs = "10111110101111000010000000" then -- 500 * 10 ^ 5
+				oneSecs_clk <= '1';
+				oneSecs <= (others => '0');
+			else
+				oneSecs_clk <= '0';
+			end if;
+		end if;
+
+	end process;
+
+	Enemy : process (thirtyMilliSecs_clk, RESET,isGameOn, isEnemyAlive)
+
+	begin
+		if RESET = '1' or StartInput = '0' then
+			SquareX <= minXsize;
+			SquareY <= minYsize;
+			SquareXSpeed <= 8;
+			SquareYSpeed <= 1;
+			SquareXMoveDir <= '0';
+			SquareYMoveDir <= '0';
+			gravity <= 1;
+			SquareColour <= "001";
+		elsif rising_edge(thirtyMilliSecs_clk) then
+			
+			if SquareXMoveDir = '0' then
+				if SquareX < SquareXmax then
+					SquareX <= SquareX + SquareXSpeed;
+				else
+					SquareXMoveDir <= '1';
+				end if;
+			else
+				if SquareX > SquareXmin then
+					SquareX <= SquareX - SquareXSpeed;
+				else
+					SquareXMoveDir <= '0';
+				end if;
+			end if;
+
+			if SquareYMoveDir = '0' then
+				if SquareY < SquareYmax then
+					SquareY <= SquareY + SquareYSpeed;
+					SquareYSpeed <= SquareYSpeed + gravity;
+				else
+					SquareYSpeed <= 25;
+					SquareYMoveDir <= '1';
+				end if;
+			else
+				if SquareY > SquareYmin and SquareYSpeed > 0 then
+					SquareY <= SquareY - SquareYSpeed;
+					SquareYSpeed <= SquareYSpeed - gravity;
+				else
+					SquareYMoveDir <= '0';
+				end if;
+			end if;
+		end if;
+
+	end process;
+
+	Player : process (twoMilliSecs_clk, RESET, isGameOn, isPlayerAlive)
+	begin
+		if RESET = '1' or StartInput = '0'  then
+			PlayerX <= minXsize;
+			PlayerY <= maxYsize - PlayerWidth - 5;
+			
+			ShotX <= PlayerX + 28;
+			ShotY <= minYsize;
+			shotIterator <= 0;
+		elsif rising_edge(twoMilliSecs_clk) then
+			if RightInput = '1' and PlayerX + PlayerWidth < maxXsize then
+				shotX <= PlayerX + 28;
+				PlayerX <= PlayerX + 1;
+			elsif LeftInput = '1' and PlayerX - 1 > minXsize then
+				PlayerX <= PlayerX - 1;
+				shotX <= PlayerX + PlayerWidth - 33;
+			end if;
+		elsif rising_edge(twoMilliSecs_clk) then
+			if shotIterator = 0 then
+				shotIterator <= 1;
+			else
+				shotIterator <= 0;
+			end if;
+		end if;
+	end process;
+	
+	
+	
+
+	ColorOutput <= "111100000000" when ScanlineX >= SquareX and ScanlineY >= SquareY and ScanlineX < SquareX + SquareWidth and ScanlineY < SquareY + SquareWidth
+		else
+		"000000000000" when ScanlineX >= PlayerX and ScanlineY >= PlayerY and ScanlineX < PlayerX + PlayerWidth and ScanlineY < PlayerY + PlayerWidth
+		else
+		"111111010000" when ScanlineX >= ShotX and ScanlineY >= ShotY and ScanlineX < ShotX + ShotWidth and ScanlineY < ShotY + ShotLength and
+		((shotIterator * shotPart < ScanlineY and scanLineY < (shotIterator + 1) * shotPart)
+		or ((shotIterator + 2) * shotPart < scanLineY and scanLineY < (shotIterator + 3) * shotPart) or ((shotIterator + 4) * shotPart < scanLineY and scanLineY < (shotIterator + 5) * shotPart)
+		or ((shotIterator + 6) * shotPart < scanLineY and scanLineY < (shotIterator + 7) * shotPart) or ((shotIterator + 8) * shotPart < scanLineY and scanLineY < (shotIterator + 9) * shotPart)
+		or ((shotIterator + 10) * shotPart < scanLineY and scanLineY < (shotIterator + 11) * shotPart) or ((shotIterator + 12) * shotPart < scanLineY and scanLineY < (shotIterator + 13) * shotPart))
+		else
+		"111111111111";
+	ColorOut <= ColorOutput;
+	isGameOn <= StartInput;
+end Behavioral;
