@@ -1,6 +1,0 @@
-
-State Machine - |CAD_VGA_Quartus|Game:VGA_SQ|game.state
-Name game.state.ENDED game.state.STARTED game.state.HOLD 
-game.state.HOLD 0 0 0 
-game.state.STARTED 0 1 1 
-game.state.ENDED 1 0 1 
