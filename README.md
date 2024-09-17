@@ -29,7 +29,7 @@ Two Segments Represent time and four represent player's score.
 
 # In Game Pictures
 
-Numbers on squares represent square's health.
+Numbers on squares represent enemy's health.
 
 ![image](https://github.com/rastin-py/NeonBlaster-an-arcade-shooting-game-in-VHDL/assets/92922383/79e6f3c4-4599-4390-8aeb-41588f501da4)
 
