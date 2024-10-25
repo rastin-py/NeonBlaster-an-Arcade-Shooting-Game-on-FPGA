@@ -1,5 +1,5 @@
 
-# NeonBlaster-an-Arcade-Shooting-Game-in-VHDL
+# NeonBlaster-an-Arcade-Shooting-Game-on-FPGA
 An arcade game implemented in VHDL as an assignment for Digital Systems Analysis & Design course at the University of Guilan, Department of Computer Engineering, presented in Fall 2023 by [Dr. Mahdi Aminian](https://scholar.google.com/citations?user=YVxXqIAAAAAJ&hl=en).
 
 This program was tested on Cyclone® V FPGA using Intel Quartus Prime.
