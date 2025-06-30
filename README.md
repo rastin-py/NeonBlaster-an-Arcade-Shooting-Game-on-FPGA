@@ -16,13 +16,14 @@ This program was tested on Cyclone® V FPGA using Intel Quartus Prime.
 Use key_1 and key_4 to move left and right. Use reset to play again.
 
 One LED on means the game hasn't started yet.
-![image](https://github.com/rastin-py/NeonBlaster-an-arcade-shooting-game-in-VHDL/assets/92922383/49d073d5-b5be-4cea-af29-9c08367bbcbd)
+![image](https://github.com/user-attachments/assets/6bfb20fc-de1b-41de-9370-0aeec4fd9ef3)
 
 Two LEDs means the game is running.
-![image](https://github.com/rastin-py/NeonBlaster-an-arcade-shooting-game-in-VHDL/assets/92922383/a2e92c60-4b36-4b5a-b579-4876393cc3ab)
+![image](https://github.com/user-attachments/assets/e7e62331-249f-49b8-8c82-82852783a1b2)
 
 Three LEDs means the game has just ended.
-![image](https://github.com/rastin-py/NeonBlaster-an-arcade-shooting-game-in-VHDL/assets/92922383/b2eed1cb-31c7-4cb0-ac67-3c23136c62b9)
+![image](https://github.com/user-attachments/assets/671b5089-4704-4b86-a627-aa1aa1651d48)
+
 
 Two Segments Represent time and four represent player's score.
 
@@ -31,6 +32,12 @@ Two Segments Represent time and four represent player's score.
 
 Numbers on squares represent enemy's health.
 
-![image](https://github.com/rastin-py/NeonBlaster-an-arcade-shooting-game-in-VHDL/assets/92922383/79e6f3c4-4599-4390-8aeb-41588f501da4)
+![image](https://github.com/user-attachments/assets/47454ba3-ad8b-4d1c-a84b-5e3d68e15613)
 
-![image](https://github.com/rastin-py/NeonBlaster-an-arcade-shooting-game-in-VHDL/assets/92922383/9a6a23e6-eaac-49cc-8570-d69d2e26eb19)
+![image](https://github.com/user-attachments/assets/22f9b2be-bfd2-4605-a7b1-a1d9ab668a91)
+
+# Showcase in AIRO Event
+This project was presented at AIRO — the Artificial Intelligence and Robotics Event at the University of Guilan’s Faculty of Engineering.
+
+![image](https://github.com/user-attachments/assets/3cb9b7b0-ea09-4b22-97a7-b23db03419d1)
+
